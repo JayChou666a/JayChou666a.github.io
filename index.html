@@ -227,6 +227,28 @@
             color: var(--medium-gray);
         }
         
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2rem;
+            color: var(--bilibili-blue);
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--bilibili-pink);
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         @media (max-width: 768px) {
             .content {
                 flex-direction: column;
@@ -252,16 +274,6 @@
                 <div class="form-group">
                     <label for="up-name">UP主名称</label>
                     <input type="text" id="up-name" placeholder="请输入UP主名称">
-                </div>
-                
-                <div class="form-group">
-                    <label for="uid">UP主UID</label>
-                    <input type="text" id="uid" placeholder="请输入UP主UID">
-                </div>
-                
-                <div class="form-group">
-                    <label for="title">视频标题</label>
-                    <input type="text" id="title" placeholder="请输入视频标题">
                 </div>
                 
                 <div class="form-group">
@@ -312,11 +324,6 @@
                 
                 <h2>其他信息</h2>
                 <div class="form-group">
-                    <label for="pub-date">发布时间</label>
-                    <input type="datetime-local" id="pub-date">
-                </div>
-                
-                <div class="form-group">
                     <label for="duration">视频时长（秒）</label>
                     <input type="number" id="duration" placeholder="请输入视频时长（秒）">
                 </div>
@@ -330,16 +337,19 @@
                     <p>请填写左侧表单并点击"评估视频热度"按钮，将在此处显示评估结果。</p>
                 </div>
                 
+                <div id="loading" class="result-card hidden">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>正在评估视频数据，请稍候...</p>
+                    </div>
+                </div>
+                
                 <div id="result-container" class="hidden">
                     <div class="result-card">
                         <h3 class="result-title">详细评分</h3>
                         <div class="score-item">
                             <span class="score-label">UP主影响力评分</span>
                             <span class="score-value" id="up-score">-</span>
-                        </div>
-                        <div class="score-item">
-                            <span class="score-label">标题吸引力评分</span>
-                            <span class="score-value" id="title-score">-</span>
                         </div>
                         <div class="score-item">
                             <span class="score-label">视频类型评分</span>
@@ -350,16 +360,36 @@
                             <span class="score-value" id="tag-score">-</span>
                         </div>
                         <div class="score-item">
-                            <span class="score-label">互动率评分</span>
-                            <span class="score-value" id="interaction-score">-</span>
+                            <span class="score-label">观看数评分</span>
+                            <span class="score-value" id="views-score">-</span>
                         </div>
                         <div class="score-item">
-                            <span class="score-label">三连率评分</span>
-                            <span class="score-value" id="triple-score">-</span>
+                            <span class="score-label">弹幕数评分</span>
+                            <span class="score-value" id="danmu-score">-</span>
                         </div>
                         <div class="score-item">
-                            <span class="score-label">时效性评分</span>
-                            <span class="score-value" id="time-score">-</span>
+                            <span class="score-label">评论数评分</span>
+                            <span class="score-value" id="comments-score">-</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">点赞数评分</span>
+                            <span class="score-value" id="likes-score">-</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">收藏数评分</span>
+                            <span class="score-value" id="favorites-score">-</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">投币数评分</span>
+                            <span class="score-value" id="coins-score">-</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">分享数评分</span>
+                            <span class="score-value" id="shares-score">-</span>
+                        </div>
+                        <div class="score-item">
+                            <span class="score-label">视频时长评分</span>
+                            <span class="score-value" id="duration-score">-</span>
                         </div>
                     </div>
                     
@@ -396,248 +426,3 @@
             </div>
         </div>
     </div>
-    <script>
-    document.getElementById('evaluate-btn').addEventListener('click', async function() {
-        // 收集所有输入数据
-        const videoData = {
-            up_name: document.getElementById('up-name').value,
-            video_type: document.getElementById('video-type').value,
-            video_tag: document.getElementById('tags').value,
-            views: parseInt(document.getElementById('view').value) || 0,
-            danmu: parseInt(document.getElementById('danmaku').value) || 0,
-            comments: parseInt(document.getElementById('comment').value) || 0,
-            likes: parseInt(document.getElementById('like').value) || 0,
-            favorites: parseInt(document.getElementById('favorite').value) || 0,
-            coins: parseInt(document.getElementById('coin').value) || 0,
-            shares: parseInt(document.getElementById('share').value) || 0,
-            duration: parseInt(document.getElementById('duration').value) || 0
-        };
-
-        // 验证必填字段
-        if (!videoData.up_name || !videoData.video_type || !videoData.views) {
-            alert('请至少填写UP主名称、视频类型和观看数');
-            return;
-        }
-
-        // 显示加载状态
-        document.getElementById('initial-message').classList.add('hidden');
-        document.getElementById('result-container').classList.remove('hidden');
-        document.getElementById('total-score').textContent = '评估中...';
-        
-        try {
-            // 调用预测函数
-            const result = await callPredictor(videoData);
-            
-            // 显示结果
-            displayResults(result);
-            
-        } catch (error) {
-            console.error('评估错误:', error);
-            alert('评估失败: ' + error.message);
-        }
-    });
-
-    // 调用预测模型的函数
-    async function callPredictor(videoData) {
-        // 这里应该是调用您的API端点
-        // 以下是模拟API调用，实际使用时替换为真实API调用
-        
-        // 模拟延迟
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // 模拟返回数据 - 替换为您的实际API调用
-        // 实际应用中应该是这样的:
-        // const response = await fetch('您的API地址/predict', {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(videoData)
-        // });
-        // const result = await response.json();
-        // return result;
-        
-        // 以下是模拟数据，结构与您的模型输出一致
-        return {
-            popularity_score: calculateMockScore(videoData),
-            probability: calculateMockProbability(videoData),
-            prediction: calculateMockPrediction(videoData),
-            score_details: {
-                "UP主影响力评分": calculateUpScore(videoData),
-                "标题吸引力评分": calculateTitleScore(videoData),
-                "视频类型评分": calculateTypeScore(videoData),
-                "标签匹配度评分": calculateTagScore(videoData),
-                "互动率评分": calculateInteractionScore(videoData),
-                "三连率评分": calculateTripleScore(videoData),
-                "时效性评分": calculateTimeScore(videoData)
-            },
-            featured_stats: {
-                averages: {
-                    views: 1200000,
-                    danmu: 15000,
-                    comments: 5000,
-                    likes: 80000,
-                    favorites: 30000,
-                    coins: 20000,
-                    shares: 5000
-                },
-                three_fifths: {
-                    views: 800000,
-                    danmu: 10000,
-                    comments: 3000,
-                    likes: 50000,
-                    favorites: 20000,
-                    coins: 15000,
-                    shares: 3000
-                },
-                duration_avg: 600
-            }
-        };
-    }
-
-    // 显示评估结果
-    function displayResults(result) {
-        // 显示各项评分
-        document.getElementById('up-score').textContent = `${result.score_details["UP主影响力评分"].toFixed(1)}/100`;
-        document.getElementById('title-score').textContent = `${result.score_details["标题吸引力评分"].toFixed(1)}/100`;
-        document.getElementById('type-score').textContent = `${result.score_details["视频类型评分"].toFixed(1)}/100`;
-        document.getElementById('tag-score').textContent = `${result.score_details["标签匹配度评分"].toFixed(1)}/100`;
-        document.getElementById('interaction-score').textContent = `${result.score_details["互动率评分"].toFixed(1)}/100`;
-        document.getElementById('triple-score').textContent = `${result.score_details["三连率评分"].toFixed(1)}/100`;
-        document.getElementById('time-score').textContent = `${result.score_details["时效性评分"].toFixed(1)}/100`;
-        
-        // 显示综合评分和概率
-        document.getElementById('total-score').textContent = `${result.popularity_score.toFixed(1)}/100`;
-        document.getElementById('probability').textContent = `${(result.probability * 100).toFixed(2)}`;
-        
-        // 显示结论
-        const conclusion = document.getElementById('conclusion');
-        conclusion.classList.remove('hidden', 'success', 'failure');
-        conclusion.textContent = result.prediction;
-        conclusion.classList.add(result.probability >= 0.6 ? 'success' : 'failure');
-        
-        // 显示与每周必看视频的对比
-        const comparisonTable = document.getElementById('stats-comparison');
-        comparisonTable.innerHTML = '';
-        
-        const metrics = ['views', 'danmu', 'comments', 'likes', 'favorites', 'coins', 'shares'];
-        metrics.forEach(metric => {
-            const row = document.createElement('tr');
-            
-            const yourValue = videoData[metric];
-            const avgValue = result.featured_stats.averages[metric];
-            const threeFifthValue = result.featured_stats.three_fifths[metric];
-            
-            // 比较结果
-            let comparison = '';
-            if (yourValue >= avgValue) {
-                comparison = `<span class="comparison-better">优于平均值</span>`;
-            } else if (yourValue >= threeFifthValue) {
-                comparison = `<span class="comparison-equal">达到3/5指标</span>`;
-            } else {
-                comparison = `<span class="comparison-worse">低于3/5指标</span>`;
-            }
-            
-            row.innerHTML = `
-                <td>${translateMetric(metric)}</td>
-                <td>${formatNumber(yourValue)}</td>
-                <td>${formatNumber(avgValue)}</td>
-                <td>${formatNumber(threeFifthValue)}</td>
-                <td>${comparison}</td>
-            `;
-            
-            comparisonTable.appendChild(row);
-        });
-        
-        // 显示时长平均值
-        document.getElementById('duration-avg').textContent = result.featured_stats.duration_avg;
-    }
-
-    // 辅助函数：翻译指标名称
-    function translateMetric(metric) {
-        const translations = {
-            'views': '观看数',
-            'danmu': '弹幕数',
-            'comments': '评论数',
-            'likes': '点赞数',
-            'favorites': '收藏数',
-            'coins': '投币数',
-            'shares': '分享数'
-        };
-        return translations[metric] || metric;
-    }
-
-    // 辅助函数：格式化数字显示
-    function formatNumber(num) {
-        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    }
-
-    /* 以下为模拟评分函数 - 实际应用中应替换为API调用 */
-    function calculateMockScore(videoData) {
-        // 简单模拟评分算法
-        let score = 0;
-        
-        // 观看数评分 (最高40分)
-        score += Math.min(40, videoData.views / 100000);
-        
-        // 互动率评分 (最高20分)
-        const interactionRate = (videoData.danmu + videoData.comments) / Math.max(1, videoData.views);
-        score += Math.min(20, interactionRate * 10000);
-        
-        // 三连率评分 (最高20分)
-        const tripleRate = (videoData.likes + videoData.favorites + videoData.coins) / Math.max(1, videoData.views);
-        score += Math.min(20, tripleRate * 3000);
-        
-        // 分享数评分 (最高10分)
-        score += Math.min(10, videoData.shares / 1000);
-        
-        // 随机波动 (最高10分)
-        score += Math.random() * 10;
-        
-        return Math.min(100, score);
-    }
-
-    function calculateMockProbability(videoData) {
-        // 基于模拟分数计算概率
-        const score = calculateMockScore(videoData);
-        return Math.min(0.99, score / 100 * 1.2);
-    }
-
-    function calculateMockPrediction(videoData) {
-        const prob = calculateMockProbability(videoData);
-        return prob >= 0.6 ? "该视频有很大可能进入每周必看！" 
-                          : "该视频进入每周必看的可能性较低";
-    }
-
-    function calculateUpScore(videoData) {
-        // 模拟UP主影响力评分
-        return Math.min(100, 70 + (videoData.views / 1000000) * 5 + Math.random() * 10);
-    }
-
-    function calculateTitleScore(videoData) {
-        // 模拟标题吸引力评分
-        return Math.min(100, 60 + videoData.title.length * 0.5 + Math.random() * 15);
-    }
-
-    // 其他模拟评分函数...
-    function calculateTypeScore(videoData) {
-        return Math.min(100, 80 + Math.random() * 15);
-    }
-
-    function calculateTagScore(videoData) {
-        const tagCount = videoData.video_tag.split(',').length;
-        return Math.min(100, 60 + tagCount * 5 + Math.random() * 10);
-    }
-
-    function calculateInteractionScore(videoData) {
-        const rate = (videoData.danmu + videoData.comments) / Math.max(1, videoData.views);
-        return Math.min(100, rate * 10000 + Math.random() * 10);
-    }
-
-    function calculateTripleScore(videoData) {
-        const rate = (videoData.likes + videoData.favorites + videoData.coins) / Math.max(1, videoData.views);
-        return Math.min(100, rate * 3000 + Math.random() * 10);
-    }
-
-    function calculateTimeScore(videoData) {
-        return Math.min(100, 80 + Math.random() * 15);
-    }
-</script>
