@@ -193,6 +193,40 @@
             display: none;
         }
         
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .stats-table th, .stats-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .stats-table th {
+            background-color: var(--light-gray);
+        }
+        
+        .stats-table tr:hover {
+            background-color: rgba(251, 114, 153, 0.1);
+        }
+        
+        .comparison-better {
+            color: #27AE60;
+            font-weight: bold;
+        }
+        
+        .comparison-worse {
+            color: #C0392B;
+            font-weight: bold;
+        }
+        
+        .comparison-equal {
+            color: var(--medium-gray);
+        }
+        
         @media (max-width: 768px) {
             .content {
                 flex-direction: column;
@@ -337,47 +371,28 @@
                         </div>
                         <div class="conclusion hidden" id="conclusion"></div>
                     </div>
+                    
+                    <div class="result-card">
+                        <h3 class="result-title">与每周必看视频对比</h3>
+                        <table class="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>指标</th>
+                                    <th>您的视频</th>
+                                    <th>必看平均值</th>
+                                    <th>必看3/5指标</th>
+                                    <th>比较结果</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stats-comparison">
+                                <!-- 动态填充对比数据 -->
+                            </tbody>
+                        </table>
+                        <div style="margin-top: 15px;">
+                            <strong>视频时长平均值:</strong> <span id="duration-avg">-</span>秒
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <script>
-        document.getElementById('evaluate-btn').addEventListener('click', function() {
-            // 这里应该是调用你的评估函数的代码
-            // 以下是模拟结果显示的代码
-            
-            // 隐藏初始消息
-            document.getElementById('initial-message').classList.add('hidden');
-            // 显示结果容器
-            document.getElementById('result-container').classList.remove('hidden');
-            
-            // 模拟评分结果 - 实际使用时替换为你的评估函数结果
-            document.getElementById('up-score').textContent = '85/100';
-            document.getElementById('title-score').textContent = '78/100';
-            document.getElementById('type-score').textContent = '92/100';
-            document.getElementById('tag-score').textContent = '80/100';
-            document.getElementById('interaction-score').textContent = '88/100';
-            document.getElementById('triple-score').textContent = '76/100';
-            document.getElementById('time-score').textContent = '82/100';
-            
-            const totalScore = '84';
-            document.getElementById('total-score').textContent = totalScore + '/100';
-            
-            const probability = Math.min(100, Math.max(0, Math.round((totalScore - 50) * 2.5));
-            document.getElementById('probability').textContent = probability;
-            
-            const conclusion = document.getElementById('conclusion');
-            conclusion.classList.remove('hidden', 'success', 'failure');
-            
-            if (probability >= 60) {
-                conclusion.textContent = '该视频有很大可能进入每周必看！';
-                conclusion.classList.add('success');
-            } else {
-                conclusion.textContent = '该视频进入每周必看的可能性较低。';
-                conclusion.classList.add('failure');
-            }
-        });
-    </script>
-</body>
-</html>
