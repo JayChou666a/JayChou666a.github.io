@@ -87,7 +87,7 @@
             color: var(--medium-gray);
         }
         
-        input, select {
+        input {
             width: 100%;
             padding: 12px;
             border: 1px solid var(--border-color);
@@ -97,7 +97,7 @@
             transition: border 0.3s;
         }
         
-        input:focus, select:focus {
+        input:focus {
             outline: none;
             border-color: var(--bilibili-blue);
             box-shadow: 0 0 0 2px rgba(35, 173, 229, 0.2);
@@ -231,22 +231,8 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="video-type">视频类型</label>
-                    <select id="video-type">
-                        <option value="">请选择视频类型</option>
-                        <option value="animation">动画</option>
-                        <option value="music">音乐</option>
-                        <option value="dance">舞蹈</option>
-                        <option value="game">游戏</option>
-                        <option value="technology">科技</option>
-                        <option value="life">生活</option>
-                        <option value="food">美食</option>
-                        <option value="animal">动物圈</option>
-                        <option value="fashion">时尚</option>
-                        <option value="entertainment">娱乐</option>
-                        <option value="movie">影视</option>
-                        <option value="documentary">纪录片</option>
-                    </select>
+                    <label for="video-type">视频类型（子分区）</label>
+                    <input type="text" id="video-type" placeholder="请输入视频子分区，如: 科技-数码">
                 </div>
                 
                 <div class="form-group">
@@ -255,16 +241,6 @@
                 </div>
                 
                 <h2>视频数据信息</h2>
-                <div class="form-group">
-                    <label for="bvid">视频BV号</label>
-                    <input type="text" id="bvid" placeholder="请输入视频BV号">
-                </div>
-                
-                <div class="form-group">
-                    <label for="url">视频链接</label>
-                    <input type="text" id="url" placeholder="请输入视频链接">
-                </div>
-                
                 <div class="form-group">
                     <label for="view">观看数</label>
                     <input type="number" id="view" placeholder="请输入观看数">
