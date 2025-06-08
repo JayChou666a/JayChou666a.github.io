@@ -563,33 +563,32 @@ async function evaluateVideo(data) {
         }
         
         // 点击评估按钮
-// 修改后的点击事件处理
+// 修改evaluateBtn的点击事件处理
 evaluateBtn.addEventListener('click', function() {
-    // 获取表单数据（确保字段名与API一致）
-    const videoData = {
+    // 确保使用正确的字段名
+    const requestData = {
         up_name: document.getElementById('up-name').value.trim(),
         video_type: document.getElementById('video-type').value.trim(),
-        views: parseFloat(document.getElementById('view').value) || 0,
-        danmu: parseFloat(document.getElementById('danmaku').value) || 0,
-        comments: parseFloat(document.getElementById('comment').value) || 0,
-        likes: parseFloat(document.getElementById('like').value) || 0,
-        favorites: parseFloat(document.getElementById('favorite').value) || 0,
-        coins: parseFloat(document.getElementById('coin').value) || 0,
-        shares: parseFloat(document.getElementById('share').value) || 0,
-        duration: parseFloat(document.getElementById('duration').value) || 0,
-        tags: document.getElementById('tags').value.trim() || ''
+        video_tag: document.getElementById('tags').value.trim() || '', // 确保有默认值
+        views: Number(document.getElementById('view').value) || 0,
+        danmu: Number(document.getElementById('danmaku').value) || 0,
+        comments: Number(document.getElementById('comment').value) || 0,
+        likes: Number(document.getElementById('like').value) || 0,
+        favorites: Number(document.getElementById('favorite').value) || 0,
+        coins: Number(document.getElementById('coin').value) || 0,
+        shares: Number(document.getElementById('share').value) || 0,
+        duration: Number(document.getElementById('duration').value) || 0
     };
-    
+
+    console.log('发送的数据:', JSON.stringify(requestData, null, 2)); // 调试用
+
     // 验证必填字段
-    const requiredFields = ['up_name', 'video_type', 'views'];
-    const missingFields = requiredFields.filter(field => !videoData[field]);
-    
-    if (missingFields.length > 0) {
-        alert(`请填写以下必填字段: ${missingFields.join(', ')}`);
+    if (!requestData.up_name || !requestData.video_type || isNaN(requestData.views)) {
+        alert('请填写UP主名称、视频分区和观看数');
         return;
     }
-    
-    evaluateVideo(videoData);
+
+    evaluateVideo(requestData);
 });
     });
 </script>
