@@ -436,38 +436,52 @@
         const resultContainer = document.getElementById('result-container');
         const conclusionElement = document.getElementById('conclusion');
         
-        async function evaluateVideo(data) {
-            // 显示加载状态
-            loadingElement.classList.remove('hidden');
-            initialMessage.classList.add('hidden');
-            resultContainer.classList.add('hidden');
-            
-            try {
-                const response = await fetch('http://localhost:5000/api/evaluate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                // 显示结果
-                displayResults(result.result);  // 注意这里改为 result.result
-                
-                return result;
-            } catch (error) {
-                console.error('评估失败:', error);
-                alert(`评估失败: ${error.message}`);
-            } finally {
-                loadingElement.classList.add('hidden');
-            }
+        // 修改后的评估函数
+async function evaluateVideo(data) {
+    loadingElement.classList.remove('hidden');
+    initialMessage.classList.add('hidden');
+    resultContainer.classList.add('hidden');
+    
+    try {
+        // 构造符合API要求的请求体
+        const requestBody = {
+            up_name: data.up_name,
+            video_type: data.video_type,
+            views: data.views,
+            danmu: data.danmu,
+            comments: data.comment,  // 注意这里改为comments而不是comment
+            likes: data.like,       // 改为likes而不是like
+            favorites: data.favorite, // 改为favorites而不是favorite
+            coins: data.coin,       // 改为coins而不是coin
+            shares: data.share,     // 改为shares而不是share
+            duration: data.duration,
+            tags: data.video_tag || ''  // 添加tags字段
+        };
+
+        const response = await fetch('http://localhost:5000/api/evaluate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody)
+        });
+        
+        if (!response.ok) {
+            // 获取更详细的错误信息
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
+        
+        const result = await response.json();
+        displayResults(result.result);
+        
+    } catch (error) {
+        console.error('评估失败:', error);
+        alert(`评估失败: ${error.message}`);
+    } finally {
+        loadingElement.classList.add('hidden');
+    }
+}
         
         function displayResults(result) {
             // 更新各项评分
@@ -549,30 +563,33 @@
         }
         
         // 点击评估按钮
-        evaluateBtn.addEventListener('click', function() {
-            // 获取表单数据
-            const videoData = {
-                up_name: document.getElementById('up-name').value.trim(),
-                video_type: document.getElementById('video-type').value.trim(),
-                video_tag: document.getElementById('tags').value.trim(),
-                views: parseFloat(document.getElementById('view').value) || 0,
-                danmu: parseFloat(document.getElementById('danmaku').value) || 0,
-                comment: parseFloat(document.getElementById('comment').value) || 0,
-                like: parseFloat(document.getElementById('like').value) || 0,
-                favorite: parseFloat(document.getElementById('favorite').value) || 0,
-                coin: parseFloat(document.getElementById('coin').value) || 0,
-                share: parseFloat(document.getElementById('share').value) || 0,
-                duration: parseFloat(document.getElementById('duration').value) || 0
-            };
-            
-            // 验证必填字段
-            if (!videoData.up_name || !videoData.video_type || !videoData.views) {
-                alert('请至少填写UP主名称、视频子分区和观看数');
-                return;
-            }
-            
-            // 调用评估函数
-            evaluateVideo(videoData);
-        });
+// 修改后的点击事件处理
+evaluateBtn.addEventListener('click', function() {
+    // 获取表单数据（确保字段名与API一致）
+    const videoData = {
+        up_name: document.getElementById('up-name').value.trim(),
+        video_type: document.getElementById('video-type').value.trim(),
+        views: parseFloat(document.getElementById('view').value) || 0,
+        danmu: parseFloat(document.getElementById('danmaku').value) || 0,
+        comments: parseFloat(document.getElementById('comment').value) || 0,
+        likes: parseFloat(document.getElementById('like').value) || 0,
+        favorites: parseFloat(document.getElementById('favorite').value) || 0,
+        coins: parseFloat(document.getElementById('coin').value) || 0,
+        shares: parseFloat(document.getElementById('share').value) || 0,
+        duration: parseFloat(document.getElementById('duration').value) || 0,
+        tags: document.getElementById('tags').value.trim() || ''
+    };
+    
+    // 验证必填字段
+    const requiredFields = ['up_name', 'video_type', 'views'];
+    const missingFields = requiredFields.filter(field => !videoData[field]);
+    
+    if (missingFields.length > 0) {
+        alert(`请填写以下必填字段: ${missingFields.join(', ')}`);
+        return;
+    }
+    
+    evaluateVideo(videoData);
+});
     });
 </script>
