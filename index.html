@@ -443,19 +443,19 @@ async function evaluateVideo(data) {
     resultContainer.classList.add('hidden');
     
     try {
-        // 构造符合API要求的请求体
+        // 修正后的请求体（字段名与API要求完全匹配）
         const requestBody = {
             up_name: data.up_name,
             video_type: data.video_type,
+            video_tag: data.video_tag || '',
             views: data.views,
             danmu: data.danmu,
-            comments: data.comment,  // 注意这里改为comments而不是comment
-            likes: data.like,       // 改为likes而不是like
-            favorites: data.favorite, // 改为favorites而不是favorite
-            coins: data.coin,       // 改为coins而不是coin
-            shares: data.share,     // 改为shares而不是share
-            duration: data.duration,
-            tags: data.video_tag || ''  // 添加tags字段
+            comments: data.comment,
+            likes: data.like,
+            favorites: data.favorite,
+            coins: data.coin,
+            shares: data.share,
+            duration: data.duration
         };
 
         const response = await fetch('http://localhost:5000/api/evaluate', {
@@ -565,18 +565,17 @@ async function evaluateVideo(data) {
         // 点击评估按钮
 // 修改evaluateBtn的点击事件处理
 evaluateBtn.addEventListener('click', function() {
-    // 确保使用正确的字段名
     const requestData = {
         up_name: document.getElementById('up-name').value.trim(),
         video_type: document.getElementById('video-type').value.trim(),
-        video_tag: document.getElementById('tags').value.trim() || '', // 确保有默认值
+        video_tag: document.getElementById('tags').value.trim() || '', // 确保字段名为 video_tag
         views: Number(document.getElementById('view').value) || 0,
         danmu: Number(document.getElementById('danmaku').value) || 0,
-        comments: Number(document.getElementById('comment').value) || 0,
-        likes: Number(document.getElementById('like').value) || 0,
-        favorites: Number(document.getElementById('favorite').value) || 0,
-        coins: Number(document.getElementById('coin').value) || 0,
-        shares: Number(document.getElementById('share').value) || 0,
+        comment: Number(document.getElementById('comment').value) || 0, // 注意这里是 comment
+        like: Number(document.getElementById('like').value) || 0,      // 注意这里是 like
+        favorite: Number(document.getElementById('favorite').value) || 0, // 注意这里是 favorite
+        coin: Number(document.getElementById('coin').value) || 0,      // 注意这里是 coin
+        share: Number(document.getElementById('share').value) || 0,    // 注意这里是 share
         duration: Number(document.getElementById('duration').value) || 0
     };
 
