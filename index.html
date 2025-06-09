@@ -443,19 +443,19 @@ async function evaluateVideo(data) {
     resultContainer.classList.add('hidden');
     
     try {
-        // 修正后的请求体（字段名与API要求完全匹配）
+        // 确保所有必填字段都有值，缺失的字段设为0
         const requestBody = {
-            up_name: data.up_name,
-            video_type: data.video_type,
+            up_name: data.up_name || '',
+            video_type: data.video_type || '',
             video_tag: data.video_tag || '',
-            views: data.views,
-            danmu: data.danmu,
-            comments: data.comment,
-            likes: data.like,
-            favorites: data.favorite,
-            coins: data.coin,
-            shares: data.share,
-            duration: data.duration
+            views: data.views || 0,
+            danmu: data.danmu || 0,
+            comments: data.comments || 0,
+            likes: data.likes || 0,
+            favorites: data.favorites || 0,
+            coins: data.coins || 0,
+            shares: data.shares || 0,
+            duration: data.duration || 0
         };
 
         const response = await fetch('http://localhost:5000/api/evaluate', {
@@ -467,7 +467,6 @@ async function evaluateVideo(data) {
         });
         
         if (!response.ok) {
-            // 获取更详细的错误信息
             const errorData = await response.json();
             throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
@@ -568,18 +567,13 @@ evaluateBtn.addEventListener('click', function() {
     const requestData = {
         up_name: document.getElementById('up-name').value.trim(),
         video_type: document.getElementById('video-type').value.trim(),
-        video_tag: document.getElementById('tags').value.trim() || '',
+        video_tag: document.getElementById('tags').value.trim(),
         views: Number(document.getElementById('view').value) || 0,
         danmu: Number(document.getElementById('danmaku').value) || 0,
-        // 修正字段名：comment -> comments
         comments: Number(document.getElementById('comment').value) || 0,
-        // 修正字段名：like -> likes
         likes: Number(document.getElementById('like').value) || 0,
-        // 修正字段名：favorite -> favorites
         favorites: Number(document.getElementById('favorite').value) || 0,
-        // 修正字段名：coin -> coins
         coins: Number(document.getElementById('coin').value) || 0,
-        // 修正字段名：share -> shares
         shares: Number(document.getElementById('share').value) || 0,
         duration: Number(document.getElementById('duration').value) || 0
     };
