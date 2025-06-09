@@ -14,7 +14,6 @@
             --medium-gray: #666;
             --border-color: #E0E0E0;
         }
-
         
         * {
             margin: 0;
@@ -289,38 +288,38 @@
                 
                 <h2>视频数据信息</h2>
                 <div class="form-group">
-                    <label for="view">观看数</label>
-                    <input type="number" id="view" placeholder="请输入观看数">
+                    <label for="views">观看数</label>
+                    <input type="number" id="views" placeholder="请输入观看数">
                 </div>
                 
                 <div class="form-group">
-                    <label for="danmaku">弹幕数</label>
-                    <input type="number" id="danmaku" placeholder="请输入弹幕数">
+                    <label for="danmu">弹幕数</label>
+                    <input type="number" id="danmu" placeholder="请输入弹幕数">
                 </div>
                 
                 <div class="form-group">
-                    <label for="comment">评论数</label>
-                    <input type="number" id="comment" placeholder="请输入评论数">
+                    <label for="comments">评论数</label>
+                    <input type="number" id="comments" placeholder="请输入评论数">
                 </div>
                 
                 <div class="form-group">
-                    <label for="like">点赞数</label>
-                    <input type="number" id="like" placeholder="请输入点赞数">
+                    <label for="likes">点赞数</label>
+                    <input type="number" id="likes" placeholder="请输入点赞数">
                 </div>
                 
                 <div class="form-group">
-                    <label for="favorite">收藏数</label>
-                    <input type="number" id="favorite" placeholder="请输入收藏数">
+                    <label for="favorites">收藏数</label>
+                    <input type="number" id="favorites" placeholder="请输入收藏数">
                 </div>
                 
                 <div class="form-group">
-                    <label for="coin">投币数</label>
-                    <input type="number" id="coin" placeholder="请输入投币数">
+                    <label for="coins">投币数</label>
+                    <input type="number" id="coins" placeholder="请输入投币数">
                 </div>
                 
                 <div class="form-group">
-                    <label for="share">分享数</label>
-                    <input type="number" id="share" placeholder="请输入分享数">
+                    <label for="shares">分享数</label>
+                    <input type="number" id="shares" placeholder="请输入分享数">
                 </div>
                 
                 <h2>其他信息</h2>
@@ -428,161 +427,161 @@
         </div>
     </div>
     
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const evaluateBtn = document.getElementById('evaluate-btn');
-        const initialMessage = document.getElementById('initial-message');
-        const loadingElement = document.getElementById('loading');
-        const resultContainer = document.getElementById('result-container');
-        const conclusionElement = document.getElementById('conclusion');
-
-          // 确保所有输入字段都有默认值
-        function getInputValue(id, defaultValue = 0) {
-            const element = document.getElementById(id);
-            return element && element.value !== '' ? Number(element.value) : defaultValue;
-        }
-        
-        // 修改后的评估函数
-    async function evaluateVideo(data) {
-        const loadingElement = document.getElementById('loading');
-        const initialMessage = document.getElementById('initial-message');
-        const resultContainer = document.getElementById('result-container');
-        
-        loadingElement.classList.remove('hidden');
-        initialMessage.classList.add('hidden');
-        resultContainer.classList.add('hidden');
-        
-        try {
-            const response = await fetch('http://localhost:5000/api/evaluate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            });
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const evaluateBtn = document.getElementById('evaluate-btn');
+            const initialMessage = document.getElementById('initial-message');
+            const loadingElement = document.getElementById('loading');
+            const resultContainer = document.getElementById('result-container');
+            const conclusionElement = document.getElementById('conclusion');
             
-            if (!response.ok) {
-                throw new Error(`HTTP错误! 状态码: ${response.status}`);
+            // 安全获取输入值函数
+            function getInputValue(id, defaultValue = 0) {
+                const element = document.getElementById(id);
+                return element && element.value !== '' ? Number(element.value) : defaultValue;
             }
             
-            const result = await response.json();
-            if (result.success) {
-                displayResults(result.result);
-            } else {
-                throw new Error(result.error || '未知错误');
+            // 评估函数
+            async function evaluateVideo() {
+                loadingElement.classList.remove('hidden');
+                initialMessage.classList.add('hidden');
+                resultContainer.classList.add('hidden');
+                
+                try {
+                    // 收集所有输入数据（字段名与后端完全匹配）
+                    const videoData = {
+                        up_name: document.getElementById('up-name').value.trim() || 'unknown',
+                        video_type: document.getElementById('video-type').value.trim() || 'unknown',
+                        video_tag: document.getElementById('tags').value.trim() || 'unknown',
+                        views: getInputValue('views'),
+                        danmu: getInputValue('danmu'),
+                        comments: getInputValue('comments'),
+                        likes: getInputValue('likes'),
+                        favorites: getInputValue('favorites'),
+                        coins: getInputValue('coins'),
+                        shares: getInputValue('shares'),
+                        duration: getInputValue('duration')
+                    };
+                    
+                    // 验证必填字段
+                    if (!videoData.up_name || videoData.up_name === 'unknown' || 
+                        !videoData.video_type || videoData.video_type === 'unknown') {
+                        throw new Error('请填写UP主名称和视频分区');
+                    }
+                    
+                    // 发送API请求
+                    const response = await fetch('http://localhost:5000/api/evaluate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(videoData)
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `HTTP错误! 状态码: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    if (result.success) {
+                        displayResults(result.result);
+                    } else {
+                        throw new Error('API返回失败');
+                    }
+                    
+                } catch (error) {
+                    console.error('评估失败:', error);
+                    alert(`评估失败: ${error.message}`);
+                } finally {
+                    loadingElement.classList.add('hidden');
+                }
             }
-        } catch (error) {
-            console.error('评估失败:', error);
-            alert(`评估失败: ${error.message}`);
-        } finally {
-            loadingElement.classList.add('hidden');
-        }
-    }
-        
-        function displayResults(result) {
-            // 更新各项评分
-            document.getElementById('up-score').textContent = result.score_details.up_name.toFixed(1);
-            document.getElementById('type-score').textContent = result.score_details.video_type.toFixed(1);
-            document.getElementById('tag-score').textContent = result.score_details.video_tag.toFixed(1);
-            document.getElementById('views-score').textContent = result.score_details.views.toFixed(1);
-            document.getElementById('danmu-score').textContent = result.score_details.danmu.toFixed(1);
-            document.getElementById('comments-score').textContent = result.score_details.comments.toFixed(1);
-            document.getElementById('likes-score').textContent = result.score_details.likes.toFixed(1);
-            document.getElementById('favorites-score').textContent = result.score_details.favorites.toFixed(1);
-            document.getElementById('coins-score').textContent = result.score_details.coins.toFixed(1);
-            document.getElementById('shares-score').textContent = result.score_details.shares.toFixed(1);
-            document.getElementById('duration-score').textContent = result.score_details.duration.toFixed(1);
             
-            // 更新总分和概率
-            document.getElementById('total-score').textContent = result.popularity_score.toFixed(1);
-            document.getElementById('probability').textContent = (result.probability).toFixed(1);
-            
-            // 更新结论
-            conclusionElement.textContent = result.prediction;
-            conclusionElement.className = 'conclusion ' + 
-                (result.prediction === 'Weekly Featured' ? 'success' : 'failure');
-            conclusionElement.classList.remove('hidden');
+            // 显示结果
+            function displayResults(result) {
+                // 更新各项评分
+                document.getElementById('up-score').textContent = result.score_details.up_name.toFixed(1);
+                document.getElementById('type-score').textContent = result.score_details.video_type.toFixed(1);
+                document.getElementById('tag-score').textContent = result.score_details.video_tag.toFixed(1);
+                document.getElementById('views-score').textContent = result.score_details.views.toFixed(1);
+                document.getElementById('danmu-score').textContent = result.score_details.danmu.toFixed(1);
+                document.getElementById('comments-score').textContent = result.score_details.comments.toFixed(1);
+                document.getElementById('likes-score').textContent = result.score_details.likes.toFixed(1);
+                document.getElementById('favorites-score').textContent = result.score_details.favorites.toFixed(1);
+                document.getElementById('coins-score').textContent = result.score_details.coins.toFixed(1);
+                document.getElementById('shares-score').textContent = result.score_details.shares.toFixed(1);
+                document.getElementById('duration-score').textContent = result.score_details.duration.toFixed(1);
+                
+                // 更新总分和概率
+                document.getElementById('total-score').textContent = result.popularity_score.toFixed(1);
+                document.getElementById('probability').textContent = (result.probability * 100).toFixed(1);
+                
+                // 更新结论
+                conclusionElement.textContent = result.prediction;
+                conclusionElement.className = 'conclusion ' + 
+                    (result.prediction === 'Weekly Featured' ? 'success' : 'failure');
+                conclusionElement.classList.remove('hidden');
+                
+                // 更新对比表格
+                updateComparisonTable(result);
+                
+                // 更新时长平均值
+                document.getElementById('duration-avg').textContent = result.featured_stats.duration_avg;
+                
+                // 显示结果容器
+                resultContainer.classList.remove('hidden');
+            }
             
             // 更新对比表格
-            updateComparisonTable(result);
+            function updateComparisonTable(result) {
+                const comparisonTable = document.getElementById('stats-comparison');
+                comparisonTable.innerHTML = '';
+                
+                const metrics = [
+                    { key: 'views', label: '观看数' },
+                    { key: 'likes', label: '点赞数' },
+                    { key: 'coins', label: '投币数' },
+                    { key: 'favorites', label: '收藏数' },
+                    { key: 'shares', label: '分享数' },
+                    { key: 'danmu', label: '弹幕数' },
+                    { key: 'comments', label: '评论数' }
+                ];
+                
+                metrics.forEach(metric => {
+                    const row = document.createElement('tr');
+                    
+                    const userValue = result.score_details[metric.key];
+                    const avgValue = result.featured_stats.averages[metric.key];
+                    const threeFifthValue = result.featured_stats.three_fifths[metric.key];
+                    
+                    // 比较结果
+                    let comparisonClass = 'comparison-equal';
+                    let comparisonText = '≈';
+                    
+                    if (userValue > avgValue * 1.1) {
+                        comparisonClass = 'comparison-better';
+                        comparisonText = '>';
+                    } else if (userValue < avgValue * 0.9) {
+                        comparisonClass = 'comparison-worse';
+                        comparisonText = '<';
+                    }
+                    
+                    row.innerHTML = `
+                        <td>${metric.label}</td>
+                        <td>${userValue.toLocaleString()}</td>
+                        <td>${avgValue.toLocaleString()}</td>
+                        <td>${threeFifthValue.toLocaleString()}</td>
+                        <td class="${comparisonClass}">${comparisonText}</td>
+                    `;
+                    
+                    comparisonTable.appendChild(row);
+                });
+            }
             
-            // 更新时长平均值
-            document.getElementById('duration-avg').textContent = result.featured_stats.duration_avg;
-            
-            // 显示结果容器
-            resultContainer.classList.remove('hidden');
-        }
-        
-        function updateComparisonTable(result) {
-            const comparisonTable = document.getElementById('stats-comparison');
-            comparisonTable.innerHTML = '';
-            
-            const metrics = [
-                { key: 'views', label: '观看数' },
-                { key: 'likes', label: '点赞数' },
-                { key: 'coins', label: '投币数' },
-                { key: 'favorites', label: '收藏数' },
-                { key: 'shares', label: '分享数' },
-                { key: 'danmu', label: '弹幕数' },
-                { key: 'comments', label: '评论数' }
-            ];
-            
-            metrics.forEach(metric => {
-                const row = document.createElement('tr');
-                
-                const userValue = parseFloat(document.getElementById(metric.key).value);
-                const avgValue = result.featured_stats.averages[metric.key];
-                const threeFifthValue = result.featured_stats.three_fifths[metric.key];
-                
-                // 比较结果
-                let comparisonClass = 'comparison-equal';
-                let comparisonText = '≈';
-                
-                if (userValue > avgValue * 1.1) {
-                    comparisonClass = 'comparison-better';
-                    comparisonText = '>';
-                } else if (userValue < avgValue * 0.9) {
-                    comparisonClass = 'comparison-worse';
-                    comparisonText = '<';
-                }
-                
-                row.innerHTML = `
-                    <td>${metric.label}</td>
-                    <td>${userValue.toLocaleString()}</td>
-                    <td>${avgValue.toLocaleString()}</td>
-                    <td>${threeFifthValue.toLocaleString()}</td>
-                    <td class="${comparisonClass}">${comparisonText}</td>
-                `;
-                
-                comparisonTable.appendChild(row);
-            });
-        }
-        
-        // 点击评估按钮
-// 修改evaluateBtn的点击事件处理
-    evaluateBtn.addEventListener('click', function() {
-        const requestData = {
-            up_name: document.getElementById('up-name').value.trim() || 'unknown',
-            video_type: document.getElementById('video-type').value.trim() || 'unknown',
-            video_tag: document.getElementById('tags').value.trim() || 'unknown',
-            views: getInputValue('view'),
-            danmu: getInputValue('danmaku'),
-            comments: getInputValue('comment'),
-            likes: getInputValue('like'),
-            favorites: getInputValue('favorite'),
-            coins: getInputValue('coin'),
-            shares: getInputValue('share'),
-            duration: getInputValue('duration')
-        };
-
-        // 验证必填字段
-        if (!requestData.up_name || requestData.up_name === 'unknown' || 
-            !requestData.video_type || requestData.video_type === 'unknown') {
-            alert('请填写UP主名称和视频分区');
-            return;
-        }
-
-        evaluateVideo(requestData);
-    });
-    });
-</script>
+            // 点击评估按钮
+            evaluateBtn.addEventListener('click', evaluateVideo);
+        });
+    </script>
+</body>
+</html>
