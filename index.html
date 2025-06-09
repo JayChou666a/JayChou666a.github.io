@@ -435,40 +435,49 @@
         const loadingElement = document.getElementById('loading');
         const resultContainer = document.getElementById('result-container');
         const conclusionElement = document.getElementById('conclusion');
+
+          // 确保所有输入字段都有默认值
+        function getInputValue(id, defaultValue = 0) {
+            const element = document.getElementById(id);
+            return element && element.value !== '' ? Number(element.value) : defaultValue;
+        }
         
         // 修改后的评估函数
-async function evaluateVideo(data) {
-    loadingElement.classList.remove('hidden');
-    initialMessage.classList.add('hidden');
-    resultContainer.classList.add('hidden');
-    
-    try {
-        const response = await fetch('http://localhost:5000/api/evaluate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        });
+    async function evaluateVideo(data) {
+        const loadingElement = document.getElementById('loading');
+        const initialMessage = document.getElementById('initial-message');
+        const resultContainer = document.getElementById('result-container');
         
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `请求失败: ${response.status}`);
-        }
+        loadingElement.classList.remove('hidden');
+        initialMessage.classList.add('hidden');
+        resultContainer.classList.add('hidden');
         
-        const result = await response.json();
-        if (result.success) {
-            displayResults(result.result);
-        } else {
-            throw new Error(result.error || '未知错误');
+        try {
+            const response = await fetch('http://localhost:5000/api/evaluate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP错误! 状态码: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            if (result.success) {
+                displayResults(result.result);
+            } else {
+                throw new Error(result.error || '未知错误');
+            }
+        } catch (error) {
+            console.error('评估失败:', error);
+            alert(`评估失败: ${error.message}`);
+        } finally {
+            loadingElement.classList.add('hidden');
         }
-    } catch (error) {
-        console.error('评估失败:', error);
-        alert(`评估失败: ${error.message}`);
-    } finally {
-        loadingElement.classList.add('hidden');
     }
-}
         
         function displayResults(result) {
             // 更新各项评分
@@ -551,30 +560,29 @@ async function evaluateVideo(data) {
         
         // 点击评估按钮
 // 修改evaluateBtn的点击事件处理
-evaluateBtn.addEventListener('click', function() {
-    // 确保所有输入字段都有默认值
-    const requestData = {
-        up_name: document.getElementById('up-name').value.trim() || 'unknown',
-        video_type: document.getElementById('video-type').value.trim() || 'unknown',
-        video_tag: document.getElementById('tags').value.trim() || 'unknown',
-        views: Number(document.getElementById('view').value) || 0,
-        danmu: Number(document.getElementById('danmaku').value) || 0,
-        comments: Number(document.getElementById('comment').value) || 0,
-        likes: Number(document.getElementById('like').value) || 0,
-        favorites: Number(document.getElementById('favorite').value) || 0,
-        coins: Number(document.getElementById('coin').value) || 0,
-        shares: Number(document.getElementById('share').value) || 0,
-        duration: Number(document.getElementById('duration').value) || 0
-    };
+    evaluateBtn.addEventListener('click', function() {
+        const requestData = {
+            up_name: document.getElementById('up-name').value.trim() || 'unknown',
+            video_type: document.getElementById('video-type').value.trim() || 'unknown',
+            video_tag: document.getElementById('tags').value.trim() || 'unknown',
+            views: getInputValue('view'),
+            danmu: getInputValue('danmaku'),
+            comments: getInputValue('comment'),
+            likes: getInputValue('like'),
+            favorites: getInputValue('favorite'),
+            coins: getInputValue('coin'),
+            shares: getInputValue('share'),
+            duration: getInputValue('duration')
+        };
 
-    // 验证必填字段
-    if (!requestData.up_name || requestData.up_name === 'unknown' || 
-        !requestData.video_type || requestData.video_type === 'unknown') {
-        alert('请填写UP主名称和视频分区');
-        return;
-    }
+        // 验证必填字段
+        if (!requestData.up_name || requestData.up_name === 'unknown' || 
+            !requestData.video_type || requestData.video_type === 'unknown') {
+            alert('请填写UP主名称和视频分区');
+            return;
+        }
 
-    evaluateVideo(requestData);
-});
+        evaluateVideo(requestData);
+    });
     });
 </script>
