@@ -568,25 +568,27 @@ evaluateBtn.addEventListener('click', function() {
     const requestData = {
         up_name: document.getElementById('up-name').value.trim(),
         video_type: document.getElementById('video-type').value.trim(),
-        video_tag: document.getElementById('tags').value.trim() || '', // 确保字段名为 video_tag
+        video_tag: document.getElementById('tags').value.trim() || '',
         views: Number(document.getElementById('view').value) || 0,
         danmu: Number(document.getElementById('danmaku').value) || 0,
-        comment: Number(document.getElementById('comment').value) || 0, // 注意这里是 comment
-        like: Number(document.getElementById('like').value) || 0,      // 注意这里是 like
-        favorite: Number(document.getElementById('favorite').value) || 0, // 注意这里是 favorite
-        coin: Number(document.getElementById('coin').value) || 0,      // 注意这里是 coin
-        share: Number(document.getElementById('share').value) || 0,    // 注意这里是 share
+        // 修正字段名：comment -> comments
+        comments: Number(document.getElementById('comment').value) || 0,
+        // 修正字段名：like -> likes
+        likes: Number(document.getElementById('like').value) || 0,
+        // 修正字段名：favorite -> favorites
+        favorites: Number(document.getElementById('favorite').value) || 0,
+        // 修正字段名：coin -> coins
+        coins: Number(document.getElementById('coin').value) || 0,
+        // 修正字段名：share -> shares
+        shares: Number(document.getElementById('share').value) || 0,
         duration: Number(document.getElementById('duration').value) || 0
     };
-
-    console.log('发送的数据:', JSON.stringify(requestData, null, 2)); // 调试用
 
     // 验证必填字段
     if (!requestData.up_name || !requestData.video_type || isNaN(requestData.views)) {
         alert('请填写UP主名称、视频分区和观看数');
         return;
     }
-    
 
     evaluateVideo(requestData);
 });
