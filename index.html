@@ -534,50 +534,55 @@
             }
             
             // 更新对比表格
-            function updateComparisonTable(result) {
-                const comparisonTable = document.getElementById('stats-comparison');
-                comparisonTable.innerHTML = '';
-                
-                const metrics = [
-                    { key: 'views', label: '观看数' },
-                    { key: 'likes', label: '点赞数' },
-                    { key: 'coins', label: '投币数' },
-                    { key: 'favorites', label: '收藏数' },
-                    { key: 'shares', label: '分享数' },
-                    { key: 'danmu', label: '弹幕数' },
-                    { key: 'comments', label: '评论数' }
-                ];
-                
-                metrics.forEach(metric => {
-                    const row = document.createElement('tr');
-                    
-                    const userValue = result.score_details[metric.key];
-                    const avgValue = result.featured_stats.averages[metric.key];
-                    const threeFifthValue = result.featured_stats.three_fifths[metric.key];
-                    
-                    // 比较结果
-                    let comparisonClass = 'comparison-equal';
-                    let comparisonText = '≈';
-                    
-                    if (userValue > avgValue * 1.1) {
-                        comparisonClass = 'comparison-better';
-                        comparisonText = '>';
-                    } else if (userValue < avgValue * 0.9) {
-                        comparisonClass = 'comparison-worse';
-                        comparisonText = '<';
-                    }
-                    
-                    row.innerHTML = `
-                        <td>${metric.label}</td>
-                        <td>${userValue.toLocaleString()}</td>
-                        <td>${avgValue.toLocaleString()}</td>
-                        <td>${threeFifthValue.toLocaleString()}</td>
-                        <td class="${comparisonClass}">${comparisonText}</td>
-                    `;
-                    
-                    comparisonTable.appendChild(row);
-                });
-            }
+function updateComparisonTable(result) {
+    const comparisonTable = document.getElementById('stats-comparison');
+    comparisonTable.innerHTML = '';
+    
+    const metrics = [
+        { key: 'views', label: '观看数' },
+        { key: 'likes', label: '点赞数' },
+        { key: 'coins', label: '投币数' },
+        { key: 'favorites', label: '收藏数' },
+        { key: 'shares', label: '分享数' },
+        { key: 'danmu', label: '弹幕数' },
+        { key: 'comments', label: '评论数' }
+    ];
+    
+    metrics.forEach(metric => {
+        const row = document.createElement('tr');
+        const userValue = result.raw_values[metric.key];  // 使用原始值
+        const avgValue = result.featured_stats.averages[metric.key];
+        const threeFifthValue = result.featured_stats.three_fifths[metric.key];
+        
+        // 比较结果计算
+        let comparisonClass = 'comparison-equal';
+        let comparisonText = '≈';
+        
+        if (userValue > avgValue * 1.1) {
+            comparisonClass = 'comparison-better';
+            comparisonText = '>';
+        } else if (userValue < avgValue * 0.9) {
+            comparisonClass = 'comparison-worse';
+            comparisonText = '<';
+        }
+        
+        row.innerHTML = `
+            <td>${metric.label}</td>
+            <td>${userValue.toLocaleString()}</td>  <!-- 显示原始值 -->
+            <td>${avgValue.toLocaleString()}</td>
+            <td>${threeFifthValue.toLocaleString()}</td>
+            <td class="${comparisonClass}">${comparisonText}</td>
+        `;
+        
+        comparisonTable.appendChild(row);
+    });
+    
+    // 更新时长显示
+    document.getElementById('duration-avg').textContent = 
+        `${result.featured_stats.duration_avg.toLocaleString()}秒`;
+    document.getElementById('duration-user').textContent = 
+        `${result.raw_values.duration.toLocaleString()}秒`;
+}
             
             // 点击评估按钮
             evaluateBtn.addEventListener('click', evaluateVideo);
