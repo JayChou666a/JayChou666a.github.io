@@ -443,37 +443,25 @@ async function evaluateVideo(data) {
     resultContainer.classList.add('hidden');
     
     try {
-        // 确保所有必填字段都有值，缺失的字段设为0
-        const requestBody = {
-            up_name: data.up_name || '',
-            video_type: data.video_type || '',
-            video_tag: data.video_tag || '',
-            views: data.views || 0,
-            danmu: data.danmu || 0,
-            comments: data.comments || 0,
-            likes: data.likes || 0,
-            favorites: data.favorites || 0,
-            coins: data.coins || 0,
-            shares: data.shares || 0,
-            duration: data.duration || 0
-        };
-
         const response = await fetch('http://localhost:5000/api/evaluate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify(data)
         });
         
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+            throw new Error(errorData.error || `请求失败: ${response.status}`);
         }
         
         const result = await response.json();
-        displayResults(result.result);
-        
+        if (result.success) {
+            displayResults(result.result);
+        } else {
+            throw new Error(result.error || '未知错误');
+        }
     } catch (error) {
         console.error('评估失败:', error);
         alert(`评估失败: ${error.message}`);
@@ -564,10 +552,11 @@ async function evaluateVideo(data) {
         // 点击评估按钮
 // 修改evaluateBtn的点击事件处理
 evaluateBtn.addEventListener('click', function() {
+    // 确保所有输入字段都有默认值
     const requestData = {
-        up_name: document.getElementById('up-name').value.trim(),
-        video_type: document.getElementById('video-type').value.trim(),
-        video_tag: document.getElementById('tags').value.trim(),
+        up_name: document.getElementById('up-name').value.trim() || 'unknown',
+        video_type: document.getElementById('video-type').value.trim() || 'unknown',
+        video_tag: document.getElementById('tags').value.trim() || 'unknown',
         views: Number(document.getElementById('view').value) || 0,
         danmu: Number(document.getElementById('danmaku').value) || 0,
         comments: Number(document.getElementById('comment').value) || 0,
@@ -579,8 +568,9 @@ evaluateBtn.addEventListener('click', function() {
     };
 
     // 验证必填字段
-    if (!requestData.up_name || !requestData.video_type || isNaN(requestData.views)) {
-        alert('请填写UP主名称、视频分区和观看数');
+    if (!requestData.up_name || requestData.up_name === 'unknown' || 
+        !requestData.video_type || requestData.video_type === 'unknown') {
+        alert('请填写UP主名称和视频分区');
         return;
     }
 
