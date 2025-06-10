@@ -419,7 +419,9 @@
                             </tbody>
                         </table>
                         <div style="margin-top: 15px;">
-                            <strong>视频时长平均值:</strong> <span id="duration-avg">-</span>秒
+                            <strong>视频时长:</strong> 
+                            <span id="duration-user">-</span>秒 
+                            (必看平均值: <span id="duration-avg">-</span>秒)
                         </div>
                     </div>
                 </div>
@@ -551,7 +553,7 @@ function updateComparisonTable(result) {
     metrics.forEach(metric => {
         const row = document.createElement('tr');
         
-        // 使用后端返回的原始值，而不是从 DOM 获取
+        // 使用后端返回的原始值
         const userValue = result.raw_values[metric.key];
         const avgValue = result.featured_stats.averages[metric.key];
         const threeFifthValue = result.featured_stats.three_fifths[metric.key];
@@ -560,12 +562,14 @@ function updateComparisonTable(result) {
         let comparisonClass = 'comparison-equal';
         let comparisonText = '≈';
         
-        if (userValue > avgValue * 1.1) {
-            comparisonClass = 'comparison-better';
-            comparisonText = '>';
-        } else if (userValue < avgValue * 0.9) {
-            comparisonClass = 'comparison-worse';
-            comparisonText = '<';
+        if (avgValue > 0) { // 避免除零错误
+            if (userValue > avgValue * 1.1) {
+                comparisonClass = 'comparison-better';
+                comparisonText = '>';
+            } else if (userValue < avgValue * 0.9) {
+                comparisonClass = 'comparison-worse';
+                comparisonText = '<';
+            }
         }
         
         row.innerHTML = `
@@ -580,8 +584,10 @@ function updateComparisonTable(result) {
     });
     
     // 更新时长显示
+    document.getElementById('duration-user').textContent = 
+        result.raw_values.duration.toLocaleString();
     document.getElementById('duration-avg').textContent = 
-        `${result.featured_stats.duration_avg.toLocaleString()}秒`;
+        result.featured_stats.duration_avg.toLocaleString();
 }
             
             // 点击评估按钮
