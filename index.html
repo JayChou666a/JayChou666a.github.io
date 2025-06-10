@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B站视频热度评估工具</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --bilibili-pink: #FB7299;
@@ -243,6 +244,132 @@
             animation: spin 1s linear infinite;
             margin: 0 auto 15px;
         }
+
+        .comparison-chart {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            flex: 1;
+            min-width: 200px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .metric-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .metric-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--light-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            color: var(--bilibili-pink);
+            font-size: 18px;
+        }
+        
+        .metric-title {
+            font-weight: 500;
+            font-size: 1rem;
+        }
+        
+        .metric-value {
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin: 5px 0;
+        }
+        
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--medium-gray);
+        }
+        
+        .comparison-bar {
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        .user-bar {
+            position: absolute;
+            height: 100%;
+            background: var(--bilibili-blue);
+            border-radius: 3px;
+        }
+        
+        .featured-bar {
+            position: absolute;
+            height: 100%;
+            background: var(--bilibili-pink);
+            border-radius: 3px;
+            opacity: 0.6;
+        }
+        
+        .comparison-result {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .comparison-icon {
+            margin-right: 5px;
+            font-size: 14px;
+        }
+        
+        .comparison-better {
+            color: #27AE60;
+        }
+        
+        .comparison-worse {
+            color: #C0392B;
+        }
+        
+        .comparison-equal {
+            color: var(--medium-gray);
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            margin-right: 5px;
+        }
+        
+        .legend-user {
+            background: var(--bilibili-blue);
+        }
+        
+        .legend-featured {
+            background: var(--bilibili-pink);
+        }
         
         @keyframes spin {
             0% { transform: rotate(0deg); }
@@ -404,21 +531,22 @@
                     
                     <div class="result-card">
                         <h3 class="result-title">与每周必看视频对比</h3>
-                        <table class="stats-table">
-                            <thead>
-                                <tr>
-                                    <th>指标</th>
-                                    <th>您的视频</th>
-                                    <th>必看平均值</th>
-                                    <th>必看3/5指标</th>
-                                    <th>比较结果</th>
-                                </tr>
-                            </thead>
-                            <tbody id="stats-comparison">
-                                <!-- 动态填充对比数据 -->
-                            </tbody>
-                        </table>
-                        <div style="margin-top: 15px;">
+                       <div class="comparison-chart" id="comparison-chart">
+                            <!-- 动态生成指标卡片 -->
+                        </div>
+                        
+                        <div class="legend">
+                            <div class="legend-item">
+                                <div class="legend-color legend-user"></div>
+                                <span>您的视频</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color legend-featured"></div>
+                                <span>每周必看平均值</span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 20px; text-align: center;">
                             <strong>视频时长:</strong> 
                             <span id="duration-user">-</span>秒 
                             (必看平均值: <span id="duration-avg">-</span>秒)
@@ -430,169 +558,188 @@
     </div>
     
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const evaluateBtn = document.getElementById('evaluate-btn');
-            const initialMessage = document.getElementById('initial-message');
-            const loadingElement = document.getElementById('loading');
-            const resultContainer = document.getElementById('result-container');
-            const conclusionElement = document.getElementById('conclusion');
+document.addEventListener('DOMContentLoaded', function() {
+    const evaluateBtn = document.getElementById('evaluate-btn');
+    const initialMessage = document.getElementById('initial-message');
+    const loadingElement = document.getElementById('loading');
+    const resultContainer = document.getElementById('result-container');
+    const conclusionElement = document.getElementById('conclusion');
+    
+    // 安全获取输入值函数
+    function getInputValue(id, defaultValue = 0) {
+        const element = document.getElementById(id);
+        return element && element.value !== '' ? Number(element.value) : defaultValue;
+    }
+    
+    // 评估函数
+    async function evaluateVideo() {
+        loadingElement.classList.remove('hidden');
+        initialMessage.classList.add('hidden');
+        resultContainer.classList.add('hidden');
+        
+        try {
+            // 收集所有输入数据（字段名与后端完全匹配）
+            const videoData = {
+                up_name: document.getElementById('up-name').value.trim() || 'unknown',
+                video_type: document.getElementById('video-type').value.trim() || 'unknown',
+                video_tag: document.getElementById('tags').value.trim() || 'unknown',
+                views: getInputValue('views'),
+                danmu: getInputValue('danmu'),
+                comments: getInputValue('comments'),
+                likes: getInputValue('likes'),
+                favorites: getInputValue('favorites'),
+                coins: getInputValue('coins'),
+                shares: getInputValue('shares'),
+                duration: getInputValue('duration')
+            };
             
-            // 安全获取输入值函数
-            function getInputValue(id, defaultValue = 0) {
-                const element = document.getElementById(id);
-                return element && element.value !== '' ? Number(element.value) : defaultValue;
+            // 验证必填字段
+            if (!videoData.up_name || videoData.up_name === 'unknown' || 
+                !videoData.video_type || videoData.video_type === 'unknown') {
+                throw new Error('请填写UP主名称和视频分区');
             }
             
-            // 评估函数
-            async function evaluateVideo() {
-                loadingElement.classList.remove('hidden');
-                initialMessage.classList.add('hidden');
-                resultContainer.classList.add('hidden');
-                
-                try {
-                    // 收集所有输入数据（字段名与后端完全匹配）
-                    const videoData = {
-                        up_name: document.getElementById('up-name').value.trim() || 'unknown',
-                        video_type: document.getElementById('video-type').value.trim() || 'unknown',
-                        video_tag: document.getElementById('tags').value.trim() || 'unknown',
-                        views: getInputValue('views'),
-                        danmu: getInputValue('danmu'),
-                        comments: getInputValue('comments'),
-                        likes: getInputValue('likes'),
-                        favorites: getInputValue('favorites'),
-                        coins: getInputValue('coins'),
-                        shares: getInputValue('shares'),
-                        duration: getInputValue('duration')
-                    };
-                    
-                    // 验证必填字段
-                    if (!videoData.up_name || videoData.up_name === 'unknown' || 
-                        !videoData.video_type || videoData.video_type === 'unknown') {
-                        throw new Error('请填写UP主名称和视频分区');
-                    }
-                    
-                    // 发送API请求
-                    const response = await fetch('http://localhost:5000/api/evaluate', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(videoData)
-                    });
-                    
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || `HTTP错误! 状态码: ${response.status}`);
-                    }
-                    
-                    const result = await response.json();
-                    if (result.success) {
-                        displayResults(result.result);
-                    } else {
-                        throw new Error('API返回失败');
-                    }
-                    
-                } catch (error) {
-                    console.error('评估失败:', error);
-                    alert(`评估失败: ${error.message}`);
-                } finally {
-                    loadingElement.classList.add('hidden');
+            // 发送API请求
+            const response = await fetch('http://localhost:5000/api/evaluate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(videoData)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP错误! 状态码: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            if (result.success) {
+                displayResults(result.result);
+            } else {
+                throw new Error('API返回失败');
+            }
+            
+        } catch (error) {
+            console.error('评估失败:', error);
+            alert(`评估失败: ${error.message}`);
+        } finally {
+            loadingElement.classList.add('hidden');
+        }
+    }
+    
+    // 显示结果
+    function displayResults(result) {
+        // 更新各项评分
+        document.getElementById('up-score').textContent = result.score_details.up_name.toFixed(1);
+        document.getElementById('type-score').textContent = result.score_details.video_type.toFixed(1);
+        document.getElementById('tag-score').textContent = result.score_details.video_tag.toFixed(1);
+        document.getElementById('views-score').textContent = result.score_details.views.toFixed(1);
+        document.getElementById('danmu-score').textContent = result.score_details.danmu.toFixed(1);
+        document.getElementById('comments-score').textContent = result.score_details.comments.toFixed(1);
+        document.getElementById('likes-score').textContent = result.score_details.likes.toFixed(1);
+        document.getElementById('favorites-score').textContent = result.score_details.favorites.toFixed(1);
+        document.getElementById('coins-score').textContent = result.score_details.coins.toFixed(1);
+        document.getElementById('shares-score').textContent = result.score_details.shares.toFixed(1);
+        document.getElementById('duration-score').textContent = result.score_details.duration.toFixed(1);
+        
+        // 更新总分和概率
+        document.getElementById('total-score').textContent = result.popularity_score.toFixed(1);
+        document.getElementById('probability').textContent = (result.probability * 100).toFixed(1);
+        
+        // 更新结论
+        conclusionElement.textContent = result.prediction;
+        conclusionElement.className = 'conclusion ' + 
+            (result.prediction === 'Weekly Featured' ? 'success' : 'failure');
+        conclusionElement.classList.remove('hidden');
+        
+        // 更新对比图表
+        updateComparisonChart(result);
+        
+        // 显示结果容器
+        resultContainer.classList.remove('hidden');
+    }
+    
+    // 更新对比图表
+    function updateComparisonChart(result) {
+        const chartContainer = document.getElementById('comparison-chart');
+        chartContainer.innerHTML = '';
+        
+        const metrics = [
+            { key: 'views', label: '观看数', icon: 'fa-eye' },
+            { key: 'likes', label: '点赞数', icon: 'fa-thumbs-up' },
+            { key: 'coins', label: '投币数', icon: 'fa-coins' },
+            { key: 'favorites', label: '收藏数', icon: 'fa-star' },
+            { key: 'shares', label: '分享数', icon: 'fa-share-alt' },
+            { key: 'danmu', label: '弹幕数', icon: 'fa-comment-dots' },
+            { key: 'comments', label: '评论数', icon: 'fa-comments' }
+        ];
+        
+        metrics.forEach(metric => {
+            const userValue = result.raw_values[metric.key];
+            const avgValue = result.featured_stats.averages[metric.key];
+            const maxValue = Math.max(userValue, avgValue, 1);
+            
+            // 计算比较结果
+            let comparisonClass = 'comparison-equal';
+            let comparisonIcon = 'fa-equals';
+            let comparisonText = '相近';
+            
+            if (avgValue > 0) {
+                const ratio = userValue / avgValue;
+                if (ratio > 1.2) {
+                    comparisonClass = 'comparison-better';
+                    comparisonIcon = 'fa-arrow-up';
+                    comparisonText = '高于平均值';
+                } else if (ratio < 0.8) {
+                    comparisonClass = 'comparison-worse';
+                    comparisonIcon = 'fa-arrow-down';
+                    comparisonText = '低于平均值';
                 }
             }
             
-            // 显示结果
-            function displayResults(result) {
-                // 更新各项评分
-                document.getElementById('up-score').textContent = result.score_details.up_name.toFixed(1);
-                document.getElementById('type-score').textContent = result.score_details.video_type.toFixed(1);
-                document.getElementById('tag-score').textContent = result.score_details.video_tag.toFixed(1);
-                document.getElementById('views-score').textContent = result.score_details.views.toFixed(1);
-                document.getElementById('danmu-score').textContent = result.score_details.danmu.toFixed(1);
-                document.getElementById('comments-score').textContent = result.score_details.comments.toFixed(1);
-                document.getElementById('likes-score').textContent = result.score_details.likes.toFixed(1);
-                document.getElementById('favorites-score').textContent = result.score_details.favorites.toFixed(1);
-                document.getElementById('coins-score').textContent = result.score_details.coins.toFixed(1);
-                document.getElementById('shares-score').textContent = result.score_details.shares.toFixed(1);
-                document.getElementById('duration-score').textContent = result.score_details.duration.toFixed(1);
+            // 创建指标卡片
+            const metricCard = document.createElement('div');
+            metricCard.className = 'metric-card';
+            metricCard.innerHTML = `
+                <div class="metric-header">
+                    <div class="metric-icon">
+                        <i class="fas ${metric.icon}"></i>
+                    </div>
+                    <div class="metric-title">${metric.label}</div>
+                </div>
+                <div class="metric-value">${formatNumber(userValue)}</div>
+                <div class="metric-label">必看平均: ${formatNumber(avgValue)}</div>
                 
-                // 更新总分和概率
-                document.getElementById('total-score').textContent = result.popularity_score.toFixed(1);
-                document.getElementById('probability').textContent = (result.probability * 100).toFixed(1);
+                <div class="comparison-bar">
+                    <div class="user-bar" style="width: ${(userValue / maxValue) * 100}%"></div>
+                    <div class="featured-bar" style="width: ${(avgValue / maxValue) * 100}%"></div>
+                </div>
                 
-                // 更新结论
-                conclusionElement.textContent = result.prediction;
-                conclusionElement.className = 'conclusion ' + 
-                    (result.prediction === 'Weekly Featured' ? 'success' : 'failure');
-                conclusionElement.classList.remove('hidden');
-                
-                // 更新对比表格
-                updateComparisonTable(result);
-                
-                // 更新时长平均值
-                document.getElementById('duration-avg').textContent = result.featured_stats.duration_avg;
-                
-                // 显示结果容器
-                resultContainer.classList.remove('hidden');
-            }
+                <div class="comparison-result ${comparisonClass}">
+                    <i class="fas ${comparisonIcon} comparison-icon"></i>
+                    ${comparisonText}
+                </div>
+            `;
             
-            // 更新对比表格
-function updateComparisonTable(result) {
-    const comparisonTable = document.getElementById('stats-comparison');
-    comparisonTable.innerHTML = '';
-    
-    const metrics = [
-        { key: 'views', label: '观看数' },
-        { key: 'likes', label: '点赞数' },
-        { key: 'coins', label: '投币数' },
-        { key: 'favorites', label: '收藏数' },
-        { key: 'shares', label: '分享数' },
-        { key: 'danmu', label: '弹幕数' },
-        { key: 'comments', label: '评论数' }
-    ];
-    
-    metrics.forEach(metric => {
-        const row = document.createElement('tr');
-        
-        // 使用后端返回的原始值
-        const userValue = result.raw_values[metric.key];
-        const avgValue = result.featured_stats.averages[metric.key];
-        const threeFifthValue = result.featured_stats.three_fifths[metric.key];
-        
-        // 比较结果
-        let comparisonClass = 'comparison-equal';
-        let comparisonText = '≈';
-        
-        if (avgValue > 0) { // 避免除零错误
-            if (userValue > avgValue * 1.1) {
-                comparisonClass = 'comparison-better';
-                comparisonText = '>';
-            } else if (userValue < avgValue * 0.9) {
-                comparisonClass = 'comparison-worse';
-                comparisonText = '<';
-            }
-        }
-        
-        row.innerHTML = `
-            <td>${metric.label}</td>
-            <td>${userValue.toLocaleString()}</td>
-            <td>${avgValue.toLocaleString()}</td>
-            <td>${threeFifthValue.toLocaleString()}</td>
-            <td class="${comparisonClass}">${comparisonText}</td>
-        `;
-        
-        comparisonTable.appendChild(row);
-    });
-    
-    // 更新时长显示
-    document.getElementById('duration-user').textContent = 
-        result.raw_values.duration.toLocaleString();
-    document.getElementById('duration-avg').textContent = 
-        result.featured_stats.duration_avg.toLocaleString();
-}
-            
-            // 点击评估按钮
-            evaluateBtn.addEventListener('click', evaluateVideo);
+            chartContainer.appendChild(metricCard);
         });
+        
+        // 更新时长显示
+        document.getElementById('duration-user').textContent = 
+            result.raw_values.duration.toLocaleString();
+        document.getElementById('duration-avg').textContent = 
+            result.featured_stats.duration_avg.toLocaleString();
+    }
+    
+    // 数字格式化函数（添加千位分隔符）
+    function formatNumber(num) {
+        return num.toLocaleString();
+    }
+    
+    // 点击评估按钮
+    evaluateBtn.addEventListener('click', evaluateVideo);
+});
     </script>
 </body>
 </html> 
